@@ -95,6 +95,7 @@ openvpn_windows: clean
 		DO_STATIC=1 \
 		IMAGEROOT="$(BUILD_DIR)" \
 		./openvpn-build/generic/build
+	strip openvpn/src/openvpn/openvpn.exe
 	cp openvpn/src/openvpn/openvpn.exe ./windows/
 
 libmnl:
