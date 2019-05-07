@@ -33,14 +33,14 @@ ifneq (,$(findstring MINGW,$(UNAME_S)))
 	TARGET_OUTPUT_DIR = "windows"
 endif
 
-.PHONY: help clean clean-build clean-submodules lz4 lzo openssl openvpn windows libmnl libnftnl wireguard-go libsodium shadowsocks
+.PHONY: help clean clean-build clean-submodules clean-android lz4 lzo openssl openvpn android android-build windows libmnl libnftnl wireguard-go libsodium shadowsocks
 
 help:
 	@echo "Please run a more specific target"
 	@echo "'make openvpn' will build a statically linked OpenVPN binary"
 	@echo "'make libnftnl' will build static libraries of libmnl and libnftnl and copy to linux/"
 
-clean: clean-build clean-submodules
+clean: clean-build clean-submodules clean-android
 
 clean-build:
 	rm -rf $(BUILD_DIR)
@@ -179,3 +179,15 @@ shadowsocks:
 		cargo +stable build --no-default-features --features sodium --release --bin sslocal
 	strip shadowsocks-rust/target/release/sslocal
 	cp shadowsocks-rust/target/release/sslocal $(TARGET_OUTPUT_DIR)/
+
+android-build: android.dockerfile
+	@echo "Building binaries for Android"
+	docker build --force-rm -t mullvad/mullvadvpn-app-android-binaries -f ./android.dockerfile .
+
+android: android-build
+	@echo "Extracting binaries for Android"
+	docker run --rm -v $(PWD)/android:/output mullvad/mullvadvpn-app-android-binaries sh -c 'cp -a /opt/mullvadvpn-binaries/* /output/'
+
+clean-android:
+	@echo "Removing Android build image"
+	docker rmi mullvad/mullvadvpn-app-android-binaries
